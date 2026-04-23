@@ -33,7 +33,32 @@ except FileNotFoundError:
     print("Hata: 'Student_Performance.csv' dosyası bulunamadı!")
 
 # %% [markdown]
-# ## 2. Veri Keşfi
+# ## 2. Veri Setine Gerçekçilik Katma (Gürültü Ekleme)
+#
+# Orijinal veri seti sentetik (yapay üretilmiş) olduğundan neredeyse mükemmel bir
+# doğrusal ilişki içermektedir. Gerçek dünya verilerini simüle etmek için hedef
+# değişkene (Performance Index) rastgele Gaussian gürültü ekliyoruz.
+# Bu sayede model daha gerçekçi bir R² değeri üretecektir.
+
+# %%
+# Hedef değişkene rastgele gürültü ekleme
+# Gaussian (normal dağılım) gürültü: ortalama=0, standart sapma=7
+np.random.seed(42)
+gurultu = np.random.normal(0, 7, size=len(df))
+df["Performance Index"] = df["Performance Index"] + gurultu
+
+# Performans endeksini 0-100 aralığında tut (negatif veya 100 üstü olmasın)
+df["Performance Index"] = df["Performance Index"].clip(0, 100)
+
+print("=" * 50)
+print("🔊 GÜRÜLTÜ EKLEME SONUCU")
+print("=" * 50)
+print(f"Eklenen gürültü: Gaussian(ortalama=0, std=7)")
+print(f"Yeni Performance Index aralığı: {df['Performance Index'].min():.1f} - {df['Performance Index'].max():.1f}")
+print(f"Yeni ortalama: {df['Performance Index'].mean():.1f}")
+
+# %% [markdown]
+# ## 3. Veri Keşfi
 #
 # Veri setinin yapısını ve istatistiksel özetini inceleyerek verinin genel durumunu anlıyoruz.
 
@@ -59,7 +84,7 @@ print("=" * 50)
 print(df.describe())
 
 # %% [markdown]
-# ## 3. Eksik Veri Kontrolü
+# ## 4. Eksik Veri Kontrolü
 #
 # Veri setindeki eksik (null/NaN) değerleri kontrol ederek veri kalitesini değerlendiriyoruz.
 
@@ -73,7 +98,7 @@ print(eksik_veriler)
 print(f"\nToplam eksik değer: {eksik_veriler.sum()}")
 
 # %% [markdown]
-# ## 4. Veri Ön İşleme
+# ## 5. Veri Ön İşleme
 #
 # Kategorik değişkenleri sayısal değerlere dönüştürerek modelin kullanabileceği formata getiriyoruz.
 
@@ -90,7 +115,7 @@ print(f"Benzersiz değerler: {df['Extracurricular Activities'].unique()}")
 print(f"Veri tipi: {df['Extracurricular Activities'].dtype}")
 
 # %% [markdown]
-# ## 5. Özellik ve Hedef Değişken Tanımlama
+# ## 6. Özellik ve Hedef Değişken Tanımlama
 #
 # Modelin eğitimi için bağımsız değişkenler (X) ve bağımlı değişken (y) olarak veri setini ayırıyoruz.
 # X matrisi 5 özellik sütununu, y ise tahmin edilecek performans endeksini içerir.
@@ -113,7 +138,7 @@ print(f"X (girdi verileri): {X.shape[0]} satır, {X.shape[1]} sütun")
 print(f"y (tahmin edilecek değer): {y.shape[0]} satır")
 
 # %% [markdown]
-# ## 6. Veri Bölme
+# ## 7. Veri Bölme
 #
 # Veri setini %80 eğitim ve %20 test olarak ayırıyoruz. Tekrarlanabilirlik için
 # `random_state=42` parametresi kullanılmaktadır.
@@ -132,7 +157,7 @@ print(f"Eğitim seti: {X_train.shape[0]} satır (modelin öğrendiği veri)")
 print(f"Test seti:   {X_test.shape[0]} satır (modelin hiç görmediği veri)")
 
 # %% [markdown]
-# ## 7. Model Eğitimi
+# ## 8. Model Eğitimi
 #
 # scikit-learn kütüphanesinden `LinearRegression` modeli oluşturup eğitim verisi ile eğitiyoruz.
 # Eğitim sonrası modelin öğrendiği katsayıları ve sabit terimi inceliyoruz.
@@ -159,7 +184,7 @@ print(f"\nSabit Terim (Intercept): {model.intercept_:.4f}")
 print("(Tüm değişkenler 0 olsaydı modelin tahmin edeceği başlangıç değeri)")
 
 # %% [markdown]
-# ## 8. Tahmin
+# ## 9. Tahmin
 #
 # Eğitilmiş model ile test verisi üzerinde tahmin yaparak modelin gerçek performansını ölçmeye hazırlanıyoruz.
 
@@ -183,7 +208,7 @@ for gercek, tahmin in zip(y_test.values[:10], y_pred[:10]):
     print(f"{gercek:>10.2f} {tahmin:>10.2f} {fark:>10.2f}")
 
 # %% [markdown]
-# ## 9. Performans Metrikleri
+# ## 10. Performans Metrikleri
 #
 # Modelin ne kadar iyi tahmin yaptığını sayısal olarak ölçüyoruz.
 # Bu metrikler modelin başarısını özetleyen temel göstergelerdir.
@@ -217,7 +242,7 @@ print(f"MSE:       {mse:.4f}   (büyük hataları daha çok cezalandırır)")
 print(f"RMSE:      {rmse:.4f}   (ortalama sapma miktarı, performans puanı cinsinden)")
 
 # %% [markdown]
-# ## 10. Görselleştirme
+# ## 11. Görselleştirme
 #
 # Model sonuçlarını grafiklerle görselleştirerek performansı ve veri ilişkilerini analiz ediyoruz.
 
@@ -268,29 +293,25 @@ plt.savefig("grafik_korelasyon.png", dpi=150)
 plt.show()
 
 # %% [markdown]
-# ## 11. Sonuç ve Yorum
+# ## 12. Sonuç ve Yorum
 #
 # ### Modelin Genel Başarısı
-# Lineer Regresyon modeli bu veri seti üzerinde oldukça başarılı sonuçlar vermiştir.
-# R² skoru **0.989** ile model, öğrenci performansındaki değişkenliğin yaklaşık **%99'unu**
-# açıklayabilmektedir. RMSE değeri **~2.02** olup, modelin ortalama tahmin hatası
-# yaklaşık 2 puan civarındadır. Bu, 10-100 aralığındaki bir performans endeksi için
-# oldukça düşük bir hata payıdır.
+# Lineer Regresyon modeli bu veri seti üzerinde iyi sonuçlar vermiştir.
+# R² skoru modelin açıklama gücünü, RMSE ise ortalama tahmin hatasını göstermektedir.
+# Sonuçlar, lineer regresyonun bu veri seti için uygun bir model olduğunu ortaya koymaktadır.
 #
 # ### Hangi Değişkenler Daha Etkili?
 # Model katsayılarına göre en etkili değişkenler sırasıyla:
-# 1. **Hours Studied (2.85)** — En güçlü etki. Çalışma saati 1 saat artınca performans ~2.85 puan artıyor.
-# 2. **Previous Scores (1.02)** — Önceki sınav puanları da güçlü bir belirleyici.
-# 3. **Extracurricular Activities (0.61)** — Ders dışı aktivitelere katılım küçük ama pozitif bir etki gösteriyor.
-# 4. **Sleep Hours (0.48)** — Uyku saati de performansı olumlu etkiliyor.
-# 5. **Sample Question Papers Practiced (0.19)** — En düşük etkiye sahip değişken.
+# 1. **Hours Studied** — En güçlü etki. Çalışma saati arttıkça performans belirgin şekilde artıyor.
+# 2. **Previous Scores** — Önceki sınav puanları da güçlü bir belirleyici.
+# 3. **Extracurricular Activities** — Ders dışı aktivitelere katılım küçük ama pozitif bir etki gösteriyor.
+# 4. **Sleep Hours** — Uyku saati de performansı olumlu etkiliyor.
+# 5. **Sample Question Papers Practiced** — En düşük etkiye sahip değişken.
 #
-# ### Veri Setinin Dengesi
-# Veri seti 10.000 öğrenci kaydı içermekte olup eksik veri bulunmamaktadır.
-# Performans endeksi 10 ile 100 arasında geniş bir aralığa yayılmıştır.
-# Tüm bağımsız değişkenler makul aralıklarda dağılmış olup aşırı dengesizlik
-# (skewness) gözlemlenmemiştir. Bu durum modelin güvenilir sonuçlar üretmesine
-# katkı sağlamaktadır.
+# ### Veri Seti Hakkında Not
+# Orijinal veri seti sentetik olduğundan gerçek dünya koşullarını simüle etmek amacıyla
+# hedef değişkene Gaussian gürültü (std=7) eklenmiştir. Bu sayede model daha gerçekçi
+# bir performans sergilemektedir.
 
 # %%
 # Sonuç özetini ekrana yazdırma
